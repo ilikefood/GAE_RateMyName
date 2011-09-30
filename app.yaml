@@ -1,4 +1,4 @@
-application: RateMyName
+application: ratemyname
 version: 1
 api_version: 1
 runtime: python
