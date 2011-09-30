@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# GAE
+# GAE_RateMyName
 #
 import wsgiref.handlers
 from google.appengine.ext import db
