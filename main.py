@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# server
+# GAE
 #
 import wsgiref.handlers
 from google.appengine.ext import db
