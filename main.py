@@ -46,7 +46,6 @@ class MyHandler(webapp.RequestHandler):
 				name.downvotes = name.downvotes + 1
 				name.put()
 
-			
 		elif cmd == "ADDMYNAME":
 			fn = self.request.get('firstname')
 			ln = self.request.get('lastname')
@@ -58,7 +57,9 @@ class MyHandler(webapp.RequestHandler):
 			self.response.out.write('put name into db')
 		
 			# return all results... limited to a certain number  
-			results = db...
+			results = db.GqlQuery('SELECT * FROM rateableName ORDER BY when DESC LIMIT 50')
+			for r in results:
+				self.response.out.write("name: " + r.firstname + " " + r.lastname)
 		
 		
 	def getCurrentNameToBeRated():
@@ -68,9 +69,6 @@ class MyHandler(webapp.RequestHandler):
 			self.response.out.write("ERROR returned gt 1 current")
 		else:
 			return name
-	
-	
-
 
 def main():
 	app = webapp.WSGIApplication([(r'.*', MyHandler)], debug=True)
