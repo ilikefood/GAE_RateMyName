@@ -16,7 +16,7 @@ class rateableName(db.Model):
 	current = db.BooleanProperty(default=False)
 
 class MyHandler(webapp.RequestHandler):
-	global detectRegisteredUsers
+	global getCurrentNameToBeRated
 	def get(self):
 		self.response.out.write("hmmmm interesting")
 		
@@ -76,11 +76,13 @@ class MyHandler(webapp.RequestHandler):
 			c = getCurrentNameToBeRated() #if there is no entry that is false, this name is THE name to be rated
 			if len(c) <= 0:
 				insertableName = rateableName(firstname= fn, lastname=ln, current=True)
+				insertableName.put()
+				self.response.out.write('put name into db AS CURRENT')
 			else:
 				insertableName = rateableName(firstname= fn, lastname=ln)
-			insertableName.put()
-			self.response.out.write('put name into db')
-		
+				insertableName.put()
+				self.response.out.write('put name into db as NOT CURRENT')
+			
 			# return all results... limited to a certain number  
 			results = db.GqlQuery('SELECT * FROM rateableName ORDER BY when DESC LIMIT 100')
 			for r in results:
