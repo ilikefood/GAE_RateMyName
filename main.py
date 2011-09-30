@@ -13,6 +13,7 @@ class rateableName(db.Model):
 	when = db.DateTimeProperty(auto_now_add=True)
 	upvotes = db.IntegerProperty(default=-1)
 	downvotes = db.IntegerProperty(default=-1)
+	current = db.BooleanProperty(default=False)
 
 class MyHandler(webapp.RequestHandler):
 	global detectRegisteredUsers
@@ -27,7 +28,7 @@ class MyHandler(webapp.RequestHandler):
 
 				<div>First Name: <input type="text" name="firstname" /> </div>
 				
-				<div>Last Name: <input type="text" name="lastname" /> </div>
+				<div>Last Name: <input type="text" name="lastname" /> 
 
                 <input type="submit" value="submit"></div>
               </form>
@@ -49,7 +50,7 @@ class MyHandler(webapp.RequestHandler):
 					if ups + downs >= 100:
 						#change current to non-current .... UPDATE
 						name = n.get()
-						name.current = 0
+						name.current = False
 						name.put()
 					else:
 						#since this is the votedFor = true branch....
@@ -72,21 +73,25 @@ class MyHandler(webapp.RequestHandler):
 
 			#to do: LANGUAGE FILTERING#
 
-			insertableName = rateableName(firstname= fn, lastname=ln)
+			c = getCurrentNameToBeRated() #if there is no entry that is false, this name is THE name to be rated
+			if len(c) <= 0:
+				insertableName = rateableName(firstname= fn, lastname=ln, current=True)
+			else:
+				insertableName = rateableName(firstname= fn, lastname=ln)
 			insertableName.put()
 			self.response.out.write('put name into db')
 		
 			# return all results... limited to a certain number  
-			results = db.GqlQuery('SELECT * FROM rateableName ORDER BY when DESC LIMIT 50')
+			results = db.GqlQuery('SELECT * FROM rateableName ORDER BY when DESC LIMIT 100')
 			for r in results:
-				self.response.out.write("name: " + r.firstname + " " + r.lastname)
+				self.response.out.write("<br />name: " + r.firstname + " " + r.lastname)
 		else:
 			self.response.out.write("unrecognized command -- " + cmd)
 		
 		
 	def getCurrentNameToBeRated(self):
 		responseString = ""
-		name = db.GqlQuery("SELECT * FROM rateableName WHERE current = '1'")
+		name = db.GqlQuery("SELECT * FROM rateableName WHERE current = True")
 		return name
 
 def main():
