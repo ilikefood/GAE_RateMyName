@@ -25,6 +25,8 @@ class MyHandler(webapp.RequestHandler):
             <body>
               <form action="/sign" method="post">
                 <div><br />operation: <input type="text" name="operation" /></div>
+				<div>votedFor: <input type="text" name="votedFor" /> </div>
+
 
 				<div>First Name: <input type="text" name="firstname" /> </div>
 				
@@ -41,7 +43,7 @@ class MyHandler(webapp.RequestHandler):
 		
 		if(cmd == "BUTTONPRESS"):
 			votedFor = int(self.request.get('votedFor'))
-			n = getCurrentNameToBeRated()
+			n = getCurrentNameToBeRated(self)
 			if votedFor:
 				for t in n:
 					ups = t.upvotes
@@ -57,6 +59,7 @@ class MyHandler(webapp.RequestHandler):
 						name = n.get()
 						name.upvotes = name.upvotes + 1
 						name.put()
+						break #incase more than one current name
 			else:
 				name = n.get() # note sure if this syntax works (as opposed to the for loop with single-item array)
 				name.downvotes = name.downvotes + 1
@@ -74,7 +77,8 @@ class MyHandler(webapp.RequestHandler):
 			#to do: LANGUAGE FILTERING#
 
 			c = getCurrentNameToBeRated(self) #if there is no entry that is false, this name is THE name to be rated
-			if len(c) <= 0:
+			cnt = c.count() #inefficient
+			if cnt <= 0:
 				insertableName = rateableName(firstname= fn, lastname=ln, current=True)
 				insertableName.put()
 				self.response.out.write('put name into db AS CURRENT')
