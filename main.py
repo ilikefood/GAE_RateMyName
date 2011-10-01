@@ -18,7 +18,7 @@ class rateableName(db.Model):
 class MyHandler(webapp.RequestHandler):
 	global getCurrentNameToBeRated
 	def get(self):
-		self.response.out.write("hmmmm interesting")
+		self.response.out.write("<title>demo</title>")
 		
 		self.response.out.write("""
           <html>
@@ -26,12 +26,8 @@ class MyHandler(webapp.RequestHandler):
               <form action="/sign" method="post">
                 <div><br />operation: <input type="text" name="operation" /></div>
 				<div>votedFor: <input type="text" name="votedFor" /> </div>
-
-
 				<div>First Name: <input type="text" name="firstname" /> </div>
-				
 				<div>Last Name: <input type="text" name="lastname" /> 
-
                 <input type="submit" value="submit"></div>
               </form>
             </body>
@@ -44,24 +40,29 @@ class MyHandler(webapp.RequestHandler):
 		if(cmd == "BUTTONPRESS"):
 			votedFor = int(self.request.get('votedFor'))
 			n = getCurrentNameToBeRated(self)
-			if votedFor:
-				for t in n:
-					ups = t.upvotes
-					downs = t.downvotes
-					
-					if ups + downs >= 100:
-						#change current to non-current .... UPDATE
-						name = n.get()
-						name.current = False
-						name.put()
-					else:
-						#since this is the votedFor = true branch....
-						name = n.get()
-						name.upvotes = name.upvotes + 1
-						name.put()
-						break #incase more than one current name
-			else:
+			voteShouldBeCounted = True
+			for t in n:
+				ups = t.upvotes
+				downs = t.downvotes
+				if ups + downs >= 5:
+					#change current to non-current .... UPDATE
+					name = n.get()
+					name.current = False
+					name.put()
+					voteShouldBeCounted = False
+				break
+				
+			if votedFor and voteShouldBeCounted:
+				#since this is the votedFor = true branch....
+				name = n.get()
+				if name.upvotes < 0:
+					name.upvotes = 0
+				name.upvotes = name.upvotes + 1
+				name.put()
+			elif not votedFor and voteShouldBeCounted:
 				name = n.get() # note sure if this syntax works (as opposed to the for loop with single-item array)
+				if name.downvotes < 0:
+					name.downvotes = 0
 				name.downvotes = name.downvotes + 1
 				name.put()
 
@@ -72,7 +73,6 @@ class MyHandler(webapp.RequestHandler):
 			if len(fn) <= 0 or len(ln) <= 0:
 				self.response.out.write("ERROR found a zero length name...")
 				return
-				
 
 			#to do: LANGUAGE FILTERING#
 
@@ -93,8 +93,6 @@ class MyHandler(webapp.RequestHandler):
 				self.response.out.write("<br />name: " + r.firstname + " " + r.lastname)
 		else:
 			self.response.out.write("unrecognized command -- " + cmd)
-		
-		
 	def getCurrentNameToBeRated(self):
 		responseString = ""
 		name = db.GqlQuery("SELECT * FROM rateableName WHERE current = True")
