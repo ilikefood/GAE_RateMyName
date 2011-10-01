@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# GAE_RateMyName
+# GAE_ratemyname
 #
 import wsgiref.handlers
 from google.appengine.ext import db
@@ -73,7 +73,7 @@ class MyHandler(webapp.RequestHandler):
 
 			#to do: LANGUAGE FILTERING#
 
-			c = getCurrentNameToBeRated() #if there is no entry that is false, this name is THE name to be rated
+			c = getCurrentNameToBeRated(self) #if there is no entry that is false, this name is THE name to be rated
 			if len(c) <= 0:
 				insertableName = rateableName(firstname= fn, lastname=ln, current=True)
 				insertableName.put()
