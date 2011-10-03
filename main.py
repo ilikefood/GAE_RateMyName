@@ -6,6 +6,7 @@ import wsgiref.handlers
 from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
+import re
 
 class rateableName(db.Model):
 	firstname = db.StringProperty()
@@ -17,6 +18,7 @@ class rateableName(db.Model):
 
 class MyHandler(webapp.RequestHandler):
 	global getCurrentNameToBeRated
+	global isContentSafe
 	def get(self):
 		self.response.out.write("<title>demo</title>")
 		
@@ -75,7 +77,11 @@ class MyHandler(webapp.RequestHandler):
 				return
 
 			#to do: LANGUAGE FILTERING#
-
+			langsafe = isContentSafe(self, fn, ln)
+			if not langsafe:
+				self.response.out.write("--  ERROR bad word!  -- ")
+				return
+			
 			c = getCurrentNameToBeRated(self) #if there is no entry that is false, this name is THE name to be rated
 			cnt = c.count() #inefficient
 			if cnt <= 0:
@@ -97,7 +103,14 @@ class MyHandler(webapp.RequestHandler):
 		responseString = ""
 		name = db.GqlQuery("SELECT * FROM rateableName WHERE current = True")
 		return name
-
+	def isContentSafe(self, fn, ln):
+		bad_words = ["fuck", "shit", "piss", "cunt", "bitch", "dick", "ass", "pussy", "vagina", "penis", "fag", "nigger", "niga", "nigga"]
+		for word in bad_words:
+			matchf = re.search(word, fn, re.IGNORECASE)
+			matchl = re.search(word, ln, re.IGNORECASE)
+			if matchf or matchl:
+				return False
+		return True
 def main():
 	app = webapp.WSGIApplication([(r'.*', MyHandler)], debug=True)
 	wsgiref.handlers.CGIHandler().run(app)	
