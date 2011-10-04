@@ -20,7 +20,8 @@ class rateableName(db.Model):
 class MyHandler(webapp.RequestHandler):
 	global getCurrentNameToBeRated
 	global isContentSafe
-	
+	global decrementCurrentNameToBeRated
+	global deThroneCurrentName
 	def get(self):
 		self.response.out.write("<title>demo</title>")
 		
@@ -45,7 +46,7 @@ class MyHandler(webapp.RequestHandler):
 	
 	def decrementCurrentNameToBeRated(key, amount=1):
 		thisEntry = db.get(key)
-		if thisEntry.upvotes < 0
+		if thisEntry.upvotes < 0:
 			thisEntry.upvotes = 0
 		thisEntry.upvotes = thisEntry.upvotes + 1
 		db.put(thisEntry)
