@@ -43,6 +43,11 @@ class MyHandler(webapp.RequestHandler):
 			votedFor = int(self.request.get('votedFor'))
 			n = getCurrentNameToBeRated(self)
 			voteShouldBeCounted = True
+			
+			
+			#call a run_in_transaction for the below items
+			
+			
 			for t in n:
 				ups = t.upvotes
 				downs = t.downvotes
@@ -76,16 +81,17 @@ class MyHandler(webapp.RequestHandler):
 				self.response.out.write("ERROR found a zero length name...")
 				return
 
-			#to do: LANGUAGE FILTERING#
+			#basic language filter#
 			langsafe = isContentSafe(self, fn, ln)
 			if not langsafe:
-				self.response.out.write("--  ERROR bad word!  -- ")
+				self.response.out.write("--  ERROR bad word  -- ")
 				return
 			
 			c = getCurrentNameToBeRated(self) #if there is no entry that is false, this name is THE name to be rated
 			cnt = c.count() #inefficient
+			
 			if cnt <= 0:
-				insertableName = rateableName(firstname= fn, lastname=ln, current=True)
+				insertableName = rateableName(firstname=fn, lastname=ln, current=True)
 				insertableName.put()
 				self.response.out.write('put name into db AS CURRENT')
 			else:
@@ -100,7 +106,6 @@ class MyHandler(webapp.RequestHandler):
 		else:
 			self.response.out.write("unrecognized command -- " + cmd)
 	def getCurrentNameToBeRated(self):
-		responseString = ""
 		name = db.GqlQuery("SELECT * FROM rateableName WHERE current = True")
 		return name
 	def isContentSafe(self, fn, ln):
