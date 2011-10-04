@@ -7,6 +7,7 @@ from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 import re
+THRESHHOLD = 5
 
 class rateableName(db.Model):
 	firstname = db.StringProperty()
@@ -19,13 +20,14 @@ class rateableName(db.Model):
 class MyHandler(webapp.RequestHandler):
 	global getCurrentNameToBeRated
 	global isContentSafe
+	
 	def get(self):
 		self.response.out.write("<title>demo</title>")
 		
 		self.response.out.write("""
           <html>
             <body>
-              <form action="/sign" method="post">
+              <form action="/index.html" method="post">
                 <div><br />operation: <input type="text" name="operation" /></div>
 				<div>votedFor: <input type="text" name="votedFor" /> </div>
 				<div>First Name: <input type="text" name="firstname" /> </div>
@@ -34,7 +36,20 @@ class MyHandler(webapp.RequestHandler):
               </form>
             </body>
           </html>""")
-
+	
+	# run_in_transaction calls
+	def deThroneCurrentName(key):
+		thisEntry = db.get(key)
+		thisEntry.current = False
+		db.put(thisEntry)
+	
+	def decrementCurrentNameToBeRated(key, amount=1):
+		thisEntry = db.get(key)
+		if thisEntry.upvotes < 0
+			thisEntry.upvotes = 0
+		thisEntry.upvotes = thisEntry.upvotes + 1
+		db.put(thisEntry)
+	
 	def post(self):
 		#button press or a name addition?
 		cmd = self.request.get('operation')
@@ -51,22 +66,24 @@ class MyHandler(webapp.RequestHandler):
 			for t in n:
 				ups = t.upvotes
 				downs = t.downvotes
-				if ups + downs >= 5:
+				if ups + downs >= THRESHHOLD:  #THRESHOLD
 					#change current to non-current .... UPDATE
-					name = n.get()
-					name.current = False
-					name.put()
+					#name = n.get()
+					#name.current = False
+					#name.put()
+					thisEntry = n.get()
+					db.run_in_transaction(deThroneCurrentName, thisEntry.key())
 					voteShouldBeCounted = False
 				break
 				
 			if votedFor and voteShouldBeCounted:
-				#since this is the votedFor = true branch....
-				name = n.get()
-				if name.upvotes < 0:
-					name.upvotes = 0
-				name.upvotes = name.upvotes + 1
-				name.put()
+				#since this is the votedFor = true branch....  UPDATE
+				thisEntry = n.get()
+				db.run_in_transaction(decrementCurrentNameToBeRated, thisEntry.key(), amount=1)
+				#name.put()
 			elif not votedFor and voteShouldBeCounted:
+				
+				#UPDATE
 				name = n.get() # note sure if this syntax works (as opposed to the for loop with single-item array)
 				if name.downvotes < 0:
 					name.downvotes = 0
@@ -80,7 +97,7 @@ class MyHandler(webapp.RequestHandler):
 			if len(fn) <= 0 or len(ln) <= 0:
 				self.response.out.write("ERROR found a zero length name...")
 				return
-
+			
 			#basic language filter#
 			langsafe = isContentSafe(self, fn, ln)
 			if not langsafe:
