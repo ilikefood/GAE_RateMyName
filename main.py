@@ -7,7 +7,7 @@ from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 import re
-THRESHHOLD = 5
+THRESHHOLD = 7
 
 class rateableName(db.Model):
 	firstname = db.StringProperty()
@@ -20,6 +20,7 @@ class rateableName(db.Model):
 class MyHandler(webapp.RequestHandler):
 	global getCurrentNameToBeRated
 	global isContentSafe
+	global incrementCurrentNameToBeRated
 	global decrementCurrentNameToBeRated
 	global deThroneCurrentName
 	def get(self):
@@ -44,11 +45,18 @@ class MyHandler(webapp.RequestHandler):
 		thisEntry.current = False
 		db.put(thisEntry)
 	
-	def decrementCurrentNameToBeRated(key, amount=1):
+	def incrementCurrentNameToBeRated(key, amount=1):
 		thisEntry = db.get(key)
 		if thisEntry.upvotes < 0:
 			thisEntry.upvotes = 0
 		thisEntry.upvotes = thisEntry.upvotes + 1
+		db.put(thisEntry)
+		
+	def decrementCurrentNameToBeRated(key, amount=1):
+		thisEntry = db.get(key)
+		if thisEntry.downvotes < 0
+			thisEntry.downvotes = 0
+		thisEntry.downvotes = thisEntry.downvotes + 1
 		db.put(thisEntry)
 	
 	def post(self):
@@ -66,6 +74,10 @@ class MyHandler(webapp.RequestHandler):
 			for t in n:
 				ups = t.upvotes
 				downs = t.downvotes
+				if ups == -1:
+					ups = 0
+				if downs == -1:
+					downs = 0
 				if ups + downs >= THRESHHOLD:  #THRESHOLD
 					#change current to non-current .... UPDATE
 					#name = n.get()
@@ -75,11 +87,11 @@ class MyHandler(webapp.RequestHandler):
 					db.run_in_transaction(deThroneCurrentName, thisEntry.key())
 					voteShouldBeCounted = False
 				break
-				
 			if votedFor and voteShouldBeCounted:
 				#since this is the votedFor = true branch....  UPDATE
 				thisEntry = n.get()
-				db.run_in_transaction(decrementCurrentNameToBeRated, thisEntry.key(), amount=1)
+				db.run_in_transaction(incrementCurrentNameToBeRated, thisEntry.key(), amount=1)
+				self.response.out("vote was counted (incremented)")
 				#name.put()
 			elif not votedFor and voteShouldBeCounted:
 				
@@ -89,6 +101,11 @@ class MyHandler(webapp.RequestHandler):
 					name.downvotes = 0
 				name.downvotes = name.downvotes + 1
 				name.put()
+				self.response.out("vote was counted (decremented)")
+				
+				
+			if not voteShouldBeCounted:
+				self.response.out("vote was not counted")
 
 		elif cmd == "ADDMYNAME":
 			fn = self.request.get('firstname')
