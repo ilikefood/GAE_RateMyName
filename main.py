@@ -54,7 +54,7 @@ class MyHandler(webapp.RequestHandler):
 		
 	def decrementCurrentNameToBeRated(key, amount=1):
 		thisEntry = db.get(key)
-		if thisEntry.downvotes < 0
+		if thisEntry.downvotes < 0:
 			thisEntry.downvotes = 0
 		thisEntry.downvotes = thisEntry.downvotes + 1
 		db.put(thisEntry)
