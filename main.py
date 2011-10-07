@@ -63,7 +63,6 @@ class MyHandler(webapp.RequestHandler):
 			
 			#call a run_in_transaction for the below items
 			
-			
 			for t in n:
 				ups = t.upvotes
 				downs = t.downvotes
